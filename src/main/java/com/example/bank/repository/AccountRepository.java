@@ -14,4 +14,6 @@ public interface AccountRepository {
     boolean existsByNumber(String number);
 
     List<Account> findAll();
+
+    void clear();
 }

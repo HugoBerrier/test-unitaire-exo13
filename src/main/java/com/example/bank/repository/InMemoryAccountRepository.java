@@ -34,4 +34,9 @@ public class InMemoryAccountRepository implements AccountRepository {
     public List<Account> findAll() {
         return new ArrayList<>(storage.values());
     }
+
+    @Override
+    public void clear() {
+        storage.clear();
+    }
 }
