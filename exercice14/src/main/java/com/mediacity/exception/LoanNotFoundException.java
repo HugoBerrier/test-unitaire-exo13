@@ -1,0 +1,8 @@
+package com.mediacity.exception;
+
+public class LoanNotFoundException extends RuntimeException {
+
+    public LoanNotFoundException(String loanId) {
+        super("Prêt introuvable : " + loanId);
+    }
+}
