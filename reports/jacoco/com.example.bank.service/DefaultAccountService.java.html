@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultAccountService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercice13</a> &gt; <a href="index.source.html" class="el_package">com.example.bank.service</a> &gt; <span class="el_source">DefaultAccountService.java</span></div><h1>DefaultAccountService.java</h1><pre class="source lang-java linenums">package com.example.bank.service;
+
+import com.example.bank.dto.CreateAccountRequest;
+import com.example.bank.exception.AccountAlreadyExistsException;
+import com.example.bank.exception.AccountNotFoundException;
+import com.example.bank.exception.InsufficientFundsException;
+import com.example.bank.exception.InvalidAmountException;
+import com.example.bank.model.Account;
+import com.example.bank.repository.AccountRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class DefaultAccountService implements AccountService {
+
+    private final AccountRepository accountRepository;
+
+<span class="fc" id="L19">    public DefaultAccountService(AccountRepository accountRepository) {</span>
+<span class="fc" id="L20">        this.accountRepository = accountRepository;</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    public Account createAccount(CreateAccountRequest request) {
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (accountRepository.existsByNumber(request.getNumber())) {</span>
+<span class="fc" id="L26">            throw new AccountAlreadyExistsException(request.getNumber());</span>
+        }
+
+<span class="fc" id="L29">        Account account = new Account();</span>
+<span class="fc" id="L30">        account.setNumber(request.getNumber());</span>
+<span class="fc" id="L31">        account.setHolder(request.getHolder());</span>
+<span class="fc" id="L32">        account.setBalance(0);</span>
+<span class="fc" id="L33">        return accountRepository.save(account);</span>
+    }
+
+    @Override
+    public Account getAccount(String number) {
+<span class="fc" id="L38">        return accountRepository.findByNumber(number)</span>
+<span class="fc" id="L39">                .orElseThrow(() -&gt; new AccountNotFoundException(number));</span>
+    }
+
+    @Override
+    public List&lt;Account&gt; getAllAccounts() {
+<span class="fc" id="L44">        return accountRepository.findAll();</span>
+    }
+
+    @Override
+    public Account deposit(String number, double amount) {
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (amount &lt;= 0) {</span>
+<span class="fc" id="L50">            throw new InvalidAmountException();</span>
+        }
+
+<span class="fc" id="L53">        Account account = getAccount(number);</span>
+<span class="fc" id="L54">        account.setBalance(account.getBalance() + amount);</span>
+<span class="fc" id="L55">        return accountRepository.save(account);</span>
+    }
+
+    @Override
+    public Account withdraw(String number, double amount) {
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (amount &lt;= 0) {</span>
+<span class="fc" id="L61">            throw new InvalidAmountException();</span>
+        }
+
+<span class="fc" id="L64">        Account account = getAccount(number);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (account.getBalance() &lt; amount) {</span>
+<span class="fc" id="L66">            throw new InsufficientFundsException();</span>
+        }
+
+<span class="fc" id="L69">        account.setBalance(account.getBalance() - amount);</span>
+<span class="fc" id="L70">        return accountRepository.save(account);</span>
+    }
+
+    @Override
+    public void transfer(String fromNumber, String toNumber, double amount) {
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (amount &lt;= 0) {</span>
+<span class="fc" id="L76">            throw new InvalidAmountException();</span>
+        }
+
+<span class="fc" id="L79">        Account fromAccount = accountRepository.findByNumber(fromNumber)</span>
+<span class="fc" id="L80">                .orElseThrow(() -&gt; new AccountNotFoundException(fromNumber));</span>
+<span class="fc" id="L81">        Account toAccount = accountRepository.findByNumber(toNumber)</span>
+<span class="fc" id="L82">                .orElseThrow(() -&gt; new AccountNotFoundException(toNumber));</span>
+
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (fromAccount.getBalance() &lt; amount) {</span>
+<span class="fc" id="L85">            throw new InsufficientFundsException();</span>
+        }
+
+<span class="fc" id="L88">        fromAccount.setBalance(fromAccount.getBalance() - amount);</span>
+<span class="fc" id="L89">        toAccount.setBalance(toAccount.getBalance() + amount);</span>
+<span class="fc" id="L90">        accountRepository.save(fromAccount);</span>
+<span class="fc" id="L91">        accountRepository.save(toAccount);</span>
+<span class="fc" id="L92">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
