@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercice14</a> &gt; <a href="index.source.html" class="el_package">com.mediacity.service</a> &gt; <span class="el_source">ReservationService.java</span></div><h1>ReservationService.java</h1><pre class="source lang-java linenums">package com.mediacity.service;
+
+import com.mediacity.exception.MemberNotFoundException;
+import com.mediacity.exception.MemberSuspendedException;
+import com.mediacity.exception.WorkAvailableException;
+import com.mediacity.exception.WorkNotFoundException;
+import com.mediacity.model.Member;
+import com.mediacity.model.Reservation;
+import com.mediacity.model.ReservationStatus;
+import com.mediacity.repository.LoanRepository;
+import com.mediacity.repository.MemberRepository;
+import com.mediacity.repository.ReservationRepository;
+import com.mediacity.repository.WorkRepository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class ReservationService {
+
+    private final MemberRepository memberRepository;
+    private final WorkRepository workRepository;
+    private final LoanRepository loanRepository;
+    private final ReservationRepository reservationRepository;
+
+    public ReservationService(MemberRepository memberRepository,
+                              WorkRepository workRepository,
+                              LoanRepository loanRepository,
+<span class="fc" id="L28">                              ReservationRepository reservationRepository) {</span>
+<span class="fc" id="L29">        this.memberRepository = memberRepository;</span>
+<span class="fc" id="L30">        this.workRepository = workRepository;</span>
+<span class="fc" id="L31">        this.loanRepository = loanRepository;</span>
+<span class="fc" id="L32">        this.reservationRepository = reservationRepository;</span>
+<span class="fc" id="L33">    }</span>
+
+    public Reservation reserve(String memberId, String workId, LocalDateTime createdAt) {
+<span class="fc" id="L36">        Member member = memberRepository.findById(memberId)</span>
+<span class="pc" id="L37">                .orElseThrow(() -&gt; new MemberNotFoundException(memberId));</span>
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (member.isSuspended()) {</span>
+<span class="fc" id="L40">            throw new MemberSuspendedException(memberId);</span>
+        }
+
+<span class="fc" id="L43">        workRepository.findById(workId)</span>
+<span class="pc" id="L44">                .orElseThrow(() -&gt; new WorkNotFoundException(workId));</span>
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (loanRepository.findActiveByWorkId(workId).isEmpty()) {</span>
+<span class="fc" id="L47">            throw new WorkAvailableException(workId);</span>
+        }
+
+<span class="fc" id="L50">        Reservation reservation = new Reservation();</span>
+<span class="fc" id="L51">        reservation.setMemberId(memberId);</span>
+<span class="fc" id="L52">        reservation.setWorkId(workId);</span>
+<span class="fc" id="L53">        reservation.setCreatedAt(createdAt);</span>
+<span class="fc" id="L54">        reservation.setStatus(ReservationStatus.WAITING);</span>
+<span class="fc" id="L55">        return reservationRepository.save(reservation);</span>
+    }
+
+    public List&lt;Reservation&gt; getWaitingReservations(String workId) {
+<span class="fc" id="L59">        return reservationRepository.findWaitingByWorkId(workId);</span>
+    }
+
+    public void onWorkReturned(String workId) {
+<span class="fc" id="L63">        List&lt;Reservation&gt; waiting = reservationRepository.findWaitingByWorkId(workId);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (!waiting.isEmpty()) {</span>
+<span class="fc" id="L65">            Reservation first = waiting.get(0);</span>
+<span class="fc" id="L66">            first.setStatus(ReservationStatus.FULFILLED);</span>
+<span class="fc" id="L67">            reservationRepository.save(first);</span>
+        }
+<span class="fc" id="L69">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

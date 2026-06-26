@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoanService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercice14</a> &gt; <a href="index.source.html" class="el_package">com.mediacity.service</a> &gt; <span class="el_source">LoanService.java</span></div><h1>LoanService.java</h1><pre class="source lang-java linenums">package com.mediacity.service;
+
+import com.mediacity.exception.LoanAlreadyReturnedException;
+import com.mediacity.exception.LoanNotFoundException;
+import com.mediacity.exception.MemberNotFoundException;
+import com.mediacity.exception.MemberSuspendedException;
+import com.mediacity.exception.WorkNotFoundException;
+import com.mediacity.exception.WorkUnavailableException;
+import com.mediacity.model.Loan;
+import com.mediacity.model.Member;
+import com.mediacity.repository.LoanRepository;
+import com.mediacity.repository.MemberRepository;
+import com.mediacity.repository.SeriousDelayRepository;
+import com.mediacity.repository.WorkRepository;
+
+import java.time.LocalDate;
+
+public class LoanService {
+
+    private final MemberRepository memberRepository;
+    private final WorkRepository workRepository;
+    private final LoanRepository loanRepository;
+    private final SeriousDelayRepository seriousDelayRepository;
+    private final ReservationService reservationService;
+
+    public LoanService(MemberRepository memberRepository,
+                       WorkRepository workRepository,
+                       LoanRepository loanRepository,
+                       SeriousDelayRepository seriousDelayRepository,
+<span class="fc" id="L30">                       ReservationService reservationService) {</span>
+<span class="fc" id="L31">        this.memberRepository = memberRepository;</span>
+<span class="fc" id="L32">        this.workRepository = workRepository;</span>
+<span class="fc" id="L33">        this.loanRepository = loanRepository;</span>
+<span class="fc" id="L34">        this.seriousDelayRepository = seriousDelayRepository;</span>
+<span class="fc" id="L35">        this.reservationService = reservationService;</span>
+<span class="fc" id="L36">    }</span>
+
+    public Loan createLoan(String memberId, String workId, LocalDate loanDate) {
+<span class="fc" id="L39">        Member member = memberRepository.findById(memberId)</span>
+<span class="pc" id="L40">                .orElseThrow(() -&gt; new MemberNotFoundException(memberId));</span>
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (member.isSuspended()) {</span>
+<span class="fc" id="L43">            throw new MemberSuspendedException(memberId);</span>
+        }
+
+<span class="fc" id="L46">        workRepository.findById(workId)</span>
+<span class="pc" id="L47">                .orElseThrow(() -&gt; new WorkNotFoundException(workId));</span>
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (loanRepository.findActiveByWorkId(workId).isPresent()) {</span>
+<span class="fc" id="L50">            throw new WorkUnavailableException(workId);</span>
+        }
+
+<span class="fc" id="L53">        Loan loan = new Loan();</span>
+<span class="fc" id="L54">        loan.setMemberId(memberId);</span>
+<span class="fc" id="L55">        loan.setWorkId(workId);</span>
+<span class="fc" id="L56">        loan.setLoanDate(loanDate);</span>
+<span class="fc" id="L57">        loan.setDueDate(loanDate.plusDays(LibraryRules.LOAN_DURATION_DAYS));</span>
+<span class="fc" id="L58">        return loanRepository.save(loan);</span>
+    }
+
+    public Loan returnLoan(String loanId, LocalDate returnDate) {
+<span class="fc" id="L62">        Loan loan = loanRepository.findById(loanId)</span>
+<span class="pc" id="L63">                .orElseThrow(() -&gt; new LoanNotFoundException(loanId));</span>
+
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (!loan.isActive()) {</span>
+<span class="nc" id="L66">            throw new LoanAlreadyReturnedException(loanId);</span>
+        }
+
+<span class="fc" id="L69">        loan.setReturnDate(returnDate);</span>
+<span class="fc" id="L70">        loan.setPenalty(LibraryRules.calculatePenalty(loan.getDueDate(), returnDate));</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (LibraryRules.isSeriousDelay(loan.getDueDate(), returnDate)) {</span>
+<span class="fc" id="L73">            int year = returnDate.getYear();</span>
+<span class="fc" id="L74">            seriousDelayRepository.recordSeriousDelay(loan.getMemberId(), year);</span>
+<span class="fc" id="L75">            int count = seriousDelayRepository.countForMemberAndYear(loan.getMemberId(), year);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if (count &gt;= LibraryRules.MAX_SERIOUS_DELAYS_PER_YEAR) {</span>
+<span class="fc" id="L77">                Member member = memberRepository.findById(loan.getMemberId())</span>
+<span class="pc" id="L78">                        .orElseThrow(() -&gt; new MemberNotFoundException(loan.getMemberId()));</span>
+<span class="fc" id="L79">                member.setSuspended(true);</span>
+<span class="fc" id="L80">                memberRepository.save(member);</span>
+            }
+        }
+
+<span class="fc" id="L84">        loanRepository.save(loan);</span>
+<span class="fc" id="L85">        reservationService.onWorkReturned(loan.getWorkId());</span>
+<span class="fc" id="L86">        return loan;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

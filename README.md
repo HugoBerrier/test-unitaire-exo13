@@ -4,6 +4,12 @@ API REST Spring Boot pour gérer des comptes bancaires (création, consultation,
 
 **Dépôt GitHub :** https://github.com/HugoBerrier/test-unitaire-exo13
 
+## Exercice 14 — MédiaCity
+
+Module Maven de gestion des prêts et réservations (TDD, BDD, JaCoCo).
+
+Voir le dossier [`exercice14/`](exercice14/) et son [README](exercice14/README.md).
+
 ## Prérequis
 
 - Java 21

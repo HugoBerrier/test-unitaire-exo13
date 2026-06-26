@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LibraryRules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercice14</a> &gt; <a href="index.source.html" class="el_package">com.mediacity.service</a> &gt; <span class="el_source">LibraryRules.java</span></div><h1>LibraryRules.java</h1><pre class="source lang-java linenums">package com.mediacity.service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public final class LibraryRules {
+
+    public static final int LOAN_DURATION_DAYS = 21;
+<span class="fc" id="L9">    public static final BigDecimal PENALTY_PER_DAY = new BigDecimal(&quot;0.15&quot;);</span>
+    public static final int SERIOUS_DELAY_DAYS = 7;
+    public static final int MAX_SERIOUS_DELAYS_PER_YEAR = 3;
+
+    private LibraryRules() {
+    }
+
+    public static BigDecimal calculatePenalty(LocalDate dueDate, LocalDate returnDate) {
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        if (!returnDate.isAfter(dueDate)) {</span>
+<span class="fc" id="L18">            return BigDecimal.ZERO;</span>
+        }
+<span class="fc" id="L20">        long daysLate = java.time.temporal.ChronoUnit.DAYS.between(dueDate, returnDate);</span>
+<span class="fc" id="L21">        return PENALTY_PER_DAY.multiply(BigDecimal.valueOf(daysLate));</span>
+    }
+
+    public static boolean isSeriousDelay(LocalDate dueDate, LocalDate returnDate) {
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (!returnDate.isAfter(dueDate)) {</span>
+<span class="fc" id="L26">            return false;</span>
+        }
+<span class="fc" id="L28">        long daysLate = java.time.temporal.ChronoUnit.DAYS.between(dueDate, returnDate);</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        return daysLate &gt;= SERIOUS_DELAY_DAYS;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

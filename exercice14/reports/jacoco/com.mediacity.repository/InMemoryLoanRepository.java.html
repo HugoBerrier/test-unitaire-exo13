@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryLoanRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercice14</a> &gt; <a href="index.source.html" class="el_package">com.mediacity.repository</a> &gt; <span class="el_source">InMemoryLoanRepository.java</span></div><h1>InMemoryLoanRepository.java</h1><pre class="source lang-java linenums">package com.mediacity.repository;
+
+import com.mediacity.model.Loan;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
+
+<span class="fc" id="L12">public class InMemoryLoanRepository implements LoanRepository {</span>
+
+<span class="fc" id="L14">    private final Map&lt;String, Loan&gt; storage = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L15">    private final AtomicLong idGenerator = new AtomicLong(1);</span>
+
+    @Override
+    public Loan save(Loan loan) {
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (loan.getId() == null) {</span>
+<span class="fc" id="L20">            loan.setId(String.valueOf(idGenerator.getAndIncrement()));</span>
+        }
+<span class="fc" id="L22">        storage.put(loan.getId(), loan);</span>
+<span class="fc" id="L23">        return loan;</span>
+    }
+
+    @Override
+    public Optional&lt;Loan&gt; findById(String id) {
+<span class="fc" id="L28">        return Optional.ofNullable(storage.get(id));</span>
+    }
+
+    @Override
+    public Optional&lt;Loan&gt; findActiveByWorkId(String workId) {
+<span class="fc" id="L33">        return storage.values().stream()</span>
+<span class="pc bpc" id="L34" title="2 of 4 branches missed.">                .filter(loan -&gt; workId.equals(loan.getWorkId()) &amp;&amp; loan.isActive())</span>
+<span class="fc" id="L35">                .findFirst();</span>
+    }
+
+    @Override
+    public List&lt;Loan&gt; findAll() {
+<span class="nc" id="L40">        return new ArrayList&lt;&gt;(storage.values());</span>
+    }
+
+    @Override
+    public void clear() {
+<span class="nc" id="L45">        storage.clear();</span>
+<span class="nc" id="L46">        idGenerator.set(1);</span>
+<span class="nc" id="L47">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
